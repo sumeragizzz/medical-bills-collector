@@ -1,24 +1,68 @@
-function doPost(e) {
-  // WebHookで受信した応答用Token
-  var replyToken = JSON.parse(e.postData.contents).events[0].replyToken;
-  // ユーザーのメッセージを取得
-  var userMessage = JSON.parse(e.postData.contents).events[0].message.text;
-  // 応答メッセージ用のAPI URL
-  var url = 'https://api.line.me/v2/bot/message/reply';
+import { TemplateMessage, TextMessage, WebhookEvent, WebhookRequestBody, ReplyableEvent, Message } from '@line/bot-sdk'
 
-  UrlFetchApp.fetch(url, {
-    'headers': {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ' + PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN'),
-    },
-    'method': 'post',
-    'payload': JSON.stringify({
-      'replyToken': replyToken,
-      'messages': [{
-        'type': 'text',
-        'text': userMessage + 'を受信しました。',
-      }],
-    }),
-    });
+function doPost(e: GoogleAppsScript.Events.DoPost) {
+  // 署名検証
+
+  const accessToken: string = PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN')
+
+  const requestBody: WebhookRequestBody = JSON.parse(e.postData.contents)
+  const event: WebhookEvent = requestBody.events[0]
+  if (event.type === 'message') {
+    if (event.message.type === "text") {
+      replyMessage(accessToken, event.replyToken, createTextMessage(`「${event.message.text}」を受信しました。`))
+    }
+  }
+  if (event.type === 'postback') {
+      if (event.postback.data === 'yes') {
+      } else {
+      }
+  }
+
   return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function replyMessage(accessToken: string, replyToken: string, message: Message): GoogleAppsScript.URL_Fetch.HTTPResponse {
+  const url: string = 'https://api.line.me/v2/bot/message/reply'
+  const params: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: 'post',
+    contentType: 'application/json; charset=utf-8',
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    },
+    payload: JSON.stringify({
+      replyToken: replyToken,
+      messages: [message]
+    })
+  }
+  return UrlFetchApp.fetch(url, params)
+}
+
+function createTextMessage(text: string): TextMessage {
+  return {
+    type: "text",
+    text: text
+  }
+}
+
+function createConfirmMessage(): TemplateMessage {
+  return {
+    type: "template",
+    altText: "cannot display template message",
+    template: {
+      type: "confirm",
+      text: "確認",
+      actions: [
+        {
+          type: "message",
+          label: "はい",
+          text: "yes"
+        },
+        {
+          type: "message",
+          label: "いいえ",
+          text: "no"
+        }
+      ]
+    }
+  }
 }
