@@ -9,16 +9,14 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
   const event: WebhookEvent = requestBody.events[0]
   if (event.type === 'message') {
     if (event.message.type === "text") {
-      replyMessage(accessToken, event.replyToken, createTextMessage(`「${event.message.text}」を受信しました。`))
+      replyMessage(accessToken, event.replyToken, createConfirmMessage(`「${event.message.text}」を受信しました。`))
     }
   }
   if (event.type === 'postback') {
-      if (event.postback.data === 'yes') {
-      } else {
-      }
+    replyMessage(accessToken, event.replyToken, createTextMessage(event.postback.data))
   }
 
-  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON)
 }
 
 function replyMessage(accessToken: string, replyToken: string, message: Message): GoogleAppsScript.URL_Fetch.HTTPResponse {
@@ -44,23 +42,25 @@ function createTextMessage(text: string): TextMessage {
   }
 }
 
-function createConfirmMessage(): TemplateMessage {
+function createConfirmMessage(text: string): TemplateMessage {
   return {
     type: "template",
     altText: "cannot display template message",
     template: {
       type: "confirm",
-      text: "確認",
+      text: text,
       actions: [
         {
-          type: "message",
+          type: "postback",
           label: "はい",
-          text: "yes"
+          displayText: "はい",
+          data: "true"
         },
         {
-          type: "message",
+          type: "postback",
           label: "いいえ",
-          text: "no"
+          displayText: "いいえ",
+          data: "false"
         }
       ]
     }
