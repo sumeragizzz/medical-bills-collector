@@ -1,4 +1,4 @@
-import { TemplateMessage, TextMessage, WebhookEvent, WebhookRequestBody, ReplyableEvent, Message } from '@line/bot-sdk'
+import { TemplateMessage, TextMessage, WebhookEvent, WebhookRequestBody, Message } from '@line/bot-sdk'
 
 function doPost(e: GoogleAppsScript.Events.DoPost) {
   // 署名検証
