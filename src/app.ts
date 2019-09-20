@@ -75,7 +75,7 @@ class BillsData {
 
   static parse(text: string): BillsData {
     const lines = text.split(/\r\n|\n|\r/)
-    const dateString: string = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd')
+    const dateString: string = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy/MM/dd')
     const hospital: string = lines[0]
     const amount: number = parseInt(lines[1])
     return new BillsData(dateString, hospital, amount)
