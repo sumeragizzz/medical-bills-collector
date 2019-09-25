@@ -1,7 +1,7 @@
 import { WebhookEvent, WebhookRequestBody, Message, TextMessage, TemplateMessage } from '@line/bot-sdk'
 
 function doPost(e: GoogleAppsScript.Events.DoPost) {
-  // 署名検証
+  // TODO 署名検証
 
   const accessToken: string = PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN')
 
@@ -15,7 +15,15 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
     }
   }
   if (event.type === 'postback') {
-    replyMessage(accessToken, event.replyToken, createTextMessage(event.postback.data))
+    const postBackData: BillsPostBackData = JSON.parse(event.postback.data)
+    let resultMessage: Message
+    if (postBackData.enabled) {
+      appendBillsCollection(postBackData.data)
+      resultMessage = createTextMessage(`登録しました。PostBackData = ${event.postback.data}`)
+    } else {
+      resultMessage = createTextMessage(`キャンセルしました。PostBackData = ${event.postback.data}`)
+    }
+    replyMessage(accessToken, event.replyToken, resultMessage)
   }
 
   return ContentService.createTextOutput(JSON.stringify({ 'content': 'post ok' })).setMimeType(ContentService.MimeType.JSON)
@@ -67,6 +75,13 @@ function createConfirmMessage(text: string, yesData: EnabledBillsData, noData: D
       ]
     }
   }
+}
+
+function appendBillsCollection(billsData: BillsData) {
+  const spreadsheetId: string = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID')
+  const spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet = SpreadsheetApp.openById(spreadsheetId)
+  const sheet: GoogleAppsScript.Spreadsheet.Sheet = spreadsheet.getSheetByName('シート1')
+  sheet.appendRow([billsData.dateString, billsData.hospital, billsData.amount])
 }
 
 class BillsData {
