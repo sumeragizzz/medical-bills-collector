@@ -1,7 +1,9 @@
 import { WebhookEvent, WebhookRequestBody, Message, TextMessage, TemplateMessage } from '@line/bot-sdk'
 
 function doPost(e: GoogleAppsScript.Events.DoPost) {
-  // TODO 署名検証
+  const channelSecret: string = PropertiesService.getScriptProperties().getProperty('CHANNEL_SECRET')
+  const signature = Utilities.base64Encode(Utilities.computeHmacSha256Signature(e.postData.contents, channelSecret))
+  // TODO リクエストヘッダーからX-Line-Signatureを取得して署名検証
 
   const accessToken: string = PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN')
 
