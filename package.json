@@ -9,8 +9,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@google/clasp": "^2.2.1",
-    "@line/bot-sdk": "^6.8.2",
+    "@google/clasp": "^2.3.0",
+    "@line/bot-sdk": "^6.8.4",
     "@types/google-apps-script": "0.0.56"
   }
 }
