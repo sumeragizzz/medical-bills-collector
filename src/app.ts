@@ -7,13 +7,21 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
 
   const accessToken: string = PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN')
 
+  console.info('start')
+  console.info(e.queryString)
+  // console.log(e.parameter)
+  // console.log(e.parameters)
+  // console.log(e.contentLength)
+  // console.log(e.contextPath)
+
   const requestBody: WebhookRequestBody = JSON.parse(e.postData.contents)
   const event: WebhookEvent = requestBody.events[0]
   if (event.type === 'message') {
     if (event.message.type === 'text') {
       const enabledBillsData: EnabledBillsData = {enabled : true, data :BillsData.parse(event.message.text)}
       const disabledBillsData: DisabledBillsData = {enabled : false}
-      replyMessage(accessToken, event.replyToken, createConfirmMessage(`「${JSON.stringify(enabledBillsData.data)}」を受信しました。`, enabledBillsData, disabledBillsData))
+      const message = createConfirmMessage(`date: ${ enabledBillsData.data.dateString},\r\n hospital: ${enabledBillsData.data.hospital},\r\n amount: ${enabledBillsData.data.amount}.`, enabledBillsData, disabledBillsData)
+      replyMessage(accessToken, event.replyToken, message)
     }
   }
   if (event.type === 'postback') {
