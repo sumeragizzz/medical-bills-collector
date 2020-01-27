@@ -113,7 +113,17 @@ type BillsPostBackData = EnabledBillsData | DisabledBillsData
 
 // メッセージングサービス
 class MessagingService {
-  // TODO
+  send(text: string) {
+    // TODO
+  }
+
+  reply(text: string) {
+    // TODO
+  }
+
+  confirm() {
+    // TODO
+  }
 }
 
 // 医療費サービス
