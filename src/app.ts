@@ -110,3 +110,81 @@ class BillsData {
 type EnabledBillsData = {enabled: true, data : BillsData}
 type DisabledBillsData = {enabled: false}
 type BillsPostBackData = EnabledBillsData | DisabledBillsData
+
+// メッセージングサービス
+class MessagingService {
+  // TODO
+}
+
+// 医療費サービス
+class MedicalBillsService {
+  repository: MedicalBillsRepository
+
+  constructor() {
+    this.repository = new MedicalBillsRepository()
+  }
+
+  create(medicalInstitutionName: string, amount: number): MedicalBills {
+    return new MedicalBills(medicalInstitutionName, amount)
+  }
+
+  register(entity: MedicalBills): boolean {
+    const existsEntity: MedicalBills = this.repository.findById(entity.id)
+    if (existsEntity == null) {
+      return false
+    }
+    this.repository.add(entity)
+    return true
+  }
+
+  summary(yearMonth: Date): number {
+    const firstDay: Date = new Date(yearMonth.getFullYear(), yearMonth.getMonth(), 1)
+    const lastDay: Date = new Date(yearMonth.getFullYear(), yearMonth.getMonth() + 1, 0)
+    const array: MedicalBills[] = this.repository.findByDate(firstDay, lastDay)
+
+    return array.reduce((count: number, bills: MedicalBills) => count += bills.amount, 0)
+  }
+}
+
+// 医療費
+class MedicalBills {
+  id: string
+  medicalInstitution: MedicalInstitution
+  amount: number
+  date: Date
+
+  constructor(medicalInstitutionName: string, amount: number) {
+    this.id = Utilities.getUuid()
+    this.medicalInstitution = new MedicalInstitution(medicalInstitutionName)
+    this.amount = amount
+    this.date = new Date()
+  }
+}
+
+// 医療機関
+class MedicalInstitution {
+  id: string
+  name: string
+  
+  constructor(name: string) {
+    this.id = Utilities.getUuid()
+    this.name = name
+  }
+}
+
+// 医療費リポジトリ
+class MedicalBillsRepository {
+  add(entity: MedicalBills): void {
+    // TODO
+  }
+
+  findById(id: string): MedicalBills | null {
+    // TODO
+    return null
+  }
+
+  findByDate(fromDate: Date, toDate: Date): MedicalBills[] {
+    // TODO
+    return null
+  }
+}
