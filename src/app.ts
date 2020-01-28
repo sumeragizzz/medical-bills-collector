@@ -184,8 +184,16 @@ class MedicalInstitution {
 
 // 医療費リポジトリ
 class MedicalBillsRepository {
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
+
+  constructor() {
+    const spreadsheetId: string = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID')
+    const spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet = SpreadsheetApp.openById(spreadsheetId)
+    this.sheet = spreadsheet.getSheetByName('シート1')
+  }
+
   add(entity: MedicalBills): void {
-    // TODO
+    this.sheet.appendRow([entity.id, entity.date, entity.medicalInstitution, entity.amount])
   }
 
   findById(id: string): MedicalBills | null {
