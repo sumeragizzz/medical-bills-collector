@@ -113,16 +113,46 @@ type BillsPostBackData = EnabledBillsData | DisabledBillsData
 
 // メッセージングサービス
 class MessagingService {
+  private static readonly URL: string = 'https://api.line.me/v2/bot/message/reply'
+  private static readonly ACCESS_TOKEN: string = PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN')
+
   send(text: string) {
     // TODO
   }
 
-  reply(text: string) {
+  reply(text: string, replyToken: string): GoogleAppsScript.URL_Fetch.HTTPResponse {
+    const message : TextMessage = {
+      type: 'text',
+      text: text
+    }
+    return this.replyMessage(message, replyToken)
+  }
+
+  
+  confirm() {
     // TODO
   }
 
-  confirm() {
-    // TODO
+  private replyMessage(message: Message, replyToken: string): GoogleAppsScript.URL_Fetch.HTTPResponse {
+    const params: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: 'post',
+      contentType: 'application/json; charset=utf-8',
+      headers: {
+        Authorization: `Bearer ${MessagingService.ACCESS_TOKEN}`
+      },
+      payload: JSON.stringify({
+        replyToken: replyToken,
+        messages: [message]
+      })
+    }
+    return UrlFetchApp.fetch(MessagingService.URL, params)
+  }
+
+  private createTextMessage(text: string): TextMessage {
+    return {
+      type: 'text',
+      text: text
+    }
   }
 }
 
@@ -156,7 +186,7 @@ class MedicalBillsService {
   }
 }
 
-// 医療費
+// 医療費エンティティ
 class MedicalBills {
   id: string
   medicalInstitution: MedicalInstitution
@@ -171,7 +201,7 @@ class MedicalBills {
   }
 }
 
-// 医療機関
+// 医療機関エンティティ
 class MedicalInstitution {
   id: string
   name: string
@@ -189,6 +219,7 @@ class MedicalBillsRepository {
   constructor() {
     const spreadsheetId: string = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID')
     const spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet = SpreadsheetApp.openById(spreadsheetId)
+    // TODO シート名を固定ではなく別に定義する
     this.sheet = spreadsheet.getSheetByName('シート1')
   }
 
