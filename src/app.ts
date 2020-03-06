@@ -7,12 +7,10 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
 
   const accessToken: string = PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN')
 
+  const messagingService: MessagingService = new MessagingService()
+
   console.info('start')
   console.info(e.queryString)
-  // console.log(e.parameter)
-  // console.log(e.parameters)
-  // console.log(e.contentLength)
-  // console.log(e.contextPath)
 
   const requestBody: WebhookRequestBody = JSON.parse(e.postData.contents)
   const event: WebhookEvent = requestBody.events[0]
@@ -20,71 +18,22 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
     if (event.message.type === 'text') {
       const enabledBillsData: EnabledBillsData = {enabled : true, data :BillsData.parse(event.message.text)}
       const disabledBillsData: DisabledBillsData = {enabled : false}
-      const message = createConfirmMessage(`date: ${ enabledBillsData.data.dateString},\r\n hospital: ${enabledBillsData.data.hospital},\r\n amount: ${enabledBillsData.data.amount}.`, enabledBillsData, disabledBillsData)
-      replyMessage(accessToken, event.replyToken, message)
+
+      const text: string = `date: ${ enabledBillsData.data.dateString},\r\n institution: ${enabledBillsData.data.hospital},\r\n amount: ${enabledBillsData.data.amount}.`
+      messagingService.confirm(text, event.replyToken, enabledBillsData, disabledBillsData)
     }
   }
+
   if (event.type === 'postback') {
     const postBackData: BillsPostBackData = JSON.parse(event.postback.data)
-    let resultMessage: Message
     if (postBackData.enabled) {
       appendBillsCollection(postBackData.data)
-      resultMessage = createTextMessage(`登録しました。PostBackData = ${event.postback.data}`)
-    } else {
-      resultMessage = createTextMessage(`キャンセルしました。PostBackData = ${event.postback.data}`)
     }
-    replyMessage(accessToken, event.replyToken, resultMessage)
+    const text = (postBackData.enabled) ? `complete. PostBackData = ${event.postback.data}.` : `cancel. PostBackData = ${event.postback.data}.`;
+    messagingService.reply(text, event.replyToken)
   }
 
   return ContentService.createTextOutput(JSON.stringify({ 'content': 'post ok' })).setMimeType(ContentService.MimeType.JSON)
-}
-
-function replyMessage(accessToken: string, replyToken: string, message: Message): GoogleAppsScript.URL_Fetch.HTTPResponse {
-  const url: string = 'https://api.line.me/v2/bot/message/reply'
-  const params: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: 'post',
-    contentType: 'application/json; charset=utf-8',
-    headers: {
-      Authorization: `Bearer ${accessToken}`
-    },
-    payload: JSON.stringify({
-      replyToken: replyToken,
-      messages: [message]
-    })
-  }
-  return UrlFetchApp.fetch(url, params)
-}
-
-function createTextMessage(text: string): TextMessage {
-  return {
-    type: 'text',
-    text: text
-  }
-}
-
-function createConfirmMessage(text: string, yesData: EnabledBillsData, noData: DisabledBillsData): TemplateMessage {
-  return {
-    type: 'template',
-    altText: 'cannot display template message',
-    template: {
-      type: 'confirm',
-      text: text,
-      actions: [
-        {
-          type: 'postback',
-          label: 'はい',
-          displayText: 'はい',
-          data: JSON.stringify(yesData)
-        },
-        {
-          type: 'postback',
-          label: 'いいえ',
-          displayText: 'いいえ',
-          data: JSON.stringify(noData)
-        }
-      ]
-    }
-  }
 }
 
 function appendBillsCollection(billsData: BillsData) {
@@ -121,7 +70,7 @@ class MessagingService {
   }
 
   reply(text: string, replyToken: string): GoogleAppsScript.URL_Fetch.HTTPResponse {
-    const message : TextMessage = {
+    const message: TextMessage = {
       type: 'text',
       text: text
     }
@@ -129,8 +78,30 @@ class MessagingService {
   }
 
   
-  confirm() {
-    // TODO
+  confirm(text: string, replyToken: string, yesData: any, noData: any): GoogleAppsScript.URL_Fetch.HTTPResponse {
+    const message: TemplateMessage = {
+      type: 'template',
+      altText: 'cannot display template message',
+      template: {
+        type: 'confirm',
+        text: text,
+        actions: [
+          {
+            type: 'postback',
+            label: 'はい',
+            displayText: 'はい',
+            data: JSON.stringify(yesData)
+          },
+          {
+            type: 'postback',
+            label: 'いいえ',
+            displayText: 'いいえ',
+            data: JSON.stringify(noData)
+          }
+        ]
+      }
+    }
+    return this.replyMessage(message, replyToken)
   }
 
   private replyMessage(message: Message, replyToken: string): GoogleAppsScript.URL_Fetch.HTTPResponse {
@@ -146,13 +117,6 @@ class MessagingService {
       })
     }
     return UrlFetchApp.fetch(MessagingService.URL, params)
-  }
-
-  private createTextMessage(text: string): TextMessage {
-    return {
-      type: 'text',
-      text: text
-    }
   }
 }
 
